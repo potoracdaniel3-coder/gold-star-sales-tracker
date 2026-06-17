@@ -32,9 +32,18 @@ function fmt(n: number) {
 }
 
 function Index() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const salespeople = useQuery({ queryKey: qk.salespeople, queryFn: fetchSalespeople });
   const jobs = useQuery({ queryKey: qk.jobs, queryFn: fetchJobs });
   const activity = useQuery({ queryKey: qk.activity, queryFn: fetchActivity });
+
+  async function handleSignOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  }
 
   const people = salespeople.data ?? [];
   const allJobs = jobs.data ?? [];
@@ -65,6 +74,9 @@ function Index() {
             <ManageSalespeopleDialog salespeople={people} />
             <AddActivityDialog salespeople={people} />
             <AddJobDialog salespeople={people} />
+            <Button variant="outline" size="sm" onClick={handleSignOut} aria-label="Sign out">
+              <LogOut className="mr-2 h-4 w-4" /> Sign out
+            </Button>
           </div>
         </header>
 
