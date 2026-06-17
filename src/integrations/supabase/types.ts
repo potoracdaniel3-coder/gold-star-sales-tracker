@@ -14,7 +14,106 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activity_log: {
+        Row: {
+          appointments_set: number
+          created_at: string
+          doors_knocked: number
+          id: string
+          log_date: string
+          salesperson_id: string
+        }
+        Insert: {
+          appointments_set?: number
+          created_at?: string
+          doors_knocked?: number
+          id?: string
+          log_date?: string
+          salesperson_id: string
+        }
+        Update: {
+          appointments_set?: number
+          created_at?: string
+          doors_knocked?: number
+          id?: string
+          log_date?: string
+          salesperson_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_salesperson_id_fkey"
+            columns: ["salesperson_id"]
+            isOneToOne: false
+            referencedRelation: "salespeople"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          closed_at: string
+          created_at: string
+          description: string
+          hours: number
+          id: string
+          job_type: string
+          revenue: number
+          salesperson_id: string
+        }
+        Insert: {
+          closed_at?: string
+          created_at?: string
+          description: string
+          hours?: number
+          id?: string
+          job_type?: string
+          revenue?: number
+          salesperson_id: string
+        }
+        Update: {
+          closed_at?: string
+          created_at?: string
+          description?: string
+          hours?: number
+          id?: string
+          job_type?: string
+          revenue?: number
+          salesperson_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_salesperson_id_fkey"
+            columns: ["salesperson_id"]
+            isOneToOne: false
+            referencedRelation: "salespeople"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      salespeople: {
+        Row: {
+          active: boolean
+          color: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
