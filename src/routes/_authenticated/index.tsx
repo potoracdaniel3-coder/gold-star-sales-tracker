@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Sparkles } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { LogOut, Sparkles } from "lucide-react";
 
 import {
   fetchActivity,
@@ -9,6 +9,8 @@ import {
   qk,
   weekStartISO,
 } from "@/lib/db";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Leaderboard } from "@/components/dashboard/Leaderboard";
 import { PersonProgress, RevenueTrend } from "@/components/dashboard/Progress";
@@ -17,7 +19,7 @@ import { AddActivityDialog } from "@/components/dashboard/AddActivityDialog";
 import { ManageSalespeopleDialog } from "@/components/dashboard/ManageSalespeopleDialog";
 import { RecentJobs } from "@/components/dashboard/RecentJobs";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Sales Leaderboard" },
@@ -32,9 +34,18 @@ function fmt(n: number) {
 }
 
 function Index() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const salespeople = useQuery({ queryKey: qk.salespeople, queryFn: fetchSalespeople });
   const jobs = useQuery({ queryKey: qk.jobs, queryFn: fetchJobs });
   const activity = useQuery({ queryKey: qk.activity, queryFn: fetchActivity });
+
+  async function handleSignOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  }
 
   const people = salespeople.data ?? [];
   const allJobs = jobs.data ?? [];
@@ -65,6 +76,9 @@ function Index() {
             <ManageSalespeopleDialog salespeople={people} />
             <AddActivityDialog salespeople={people} />
             <AddJobDialog salespeople={people} />
+            <Button variant="outline" size="sm" onClick={handleSignOut} aria-label="Sign out">
+              <LogOut className="mr-2 h-4 w-4" /> Sign out
+            </Button>
           </div>
         </header>
 
