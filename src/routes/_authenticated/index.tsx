@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Sparkles } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { LogOut, Sparkles } from "lucide-react";
 
 import {
   fetchActivity,
@@ -9,6 +9,8 @@ import {
   qk,
   weekStartISO,
 } from "@/lib/db";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Leaderboard } from "@/components/dashboard/Leaderboard";
 import { PersonProgress, RevenueTrend } from "@/components/dashboard/Progress";
