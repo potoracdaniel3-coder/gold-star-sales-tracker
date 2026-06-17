@@ -17,7 +17,7 @@ import { AddActivityDialog } from "@/components/dashboard/AddActivityDialog";
 import { ManageSalespeopleDialog } from "@/components/dashboard/ManageSalespeopleDialog";
 import { RecentJobs } from "@/components/dashboard/RecentJobs";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Sales Leaderboard" },
