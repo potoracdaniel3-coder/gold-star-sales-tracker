@@ -54,7 +54,8 @@ export function SubmitJobDialog({ me }: { me: Salesperson }) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.jobs });
-      toast.success("Submitted for manager approval");
+      toast.success("Request sent to your manager for approval");
+
       setDescription("");
       setRevenue("");
       setHours("");
