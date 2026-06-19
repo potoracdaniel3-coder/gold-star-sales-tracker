@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { qk, type Job, type Salesperson } from "@/lib/db";
 import { Button } from "@/components/ui/button";
+import { useRole } from "@/hooks/useRole";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -22,6 +23,8 @@ export function RecentJobs({
 }) {
   const map = useMemo(() => new Map(salespeople.map((p) => [p.id, p])), [salespeople]);
   const qc = useQueryClient();
+  const roleQ = useRole();
+  const isManager = roleQ.data === "manager";
 
   const del = useMutation({
     mutationFn: async (id: string) => {
@@ -75,16 +78,18 @@ export function RecentJobs({
                 <div className="text-right">
                   <div className="font-display text-lg font-semibold text-gold">{fmt(j.revenue)}</div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="opacity-0 group-hover:opacity-100"
-                  onClick={() => {
-                    if (confirm("Delete this job?")) del.mutate(j.id);
-                  }}
-                >
-                  <Trash2 className="text-destructive" />
-                </Button>
+                {isManager && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="opacity-0 group-hover:opacity-100"
+                    onClick={() => {
+                      if (confirm("Delete this job?")) del.mutate(j.id);
+                    }}
+                  >
+                    <Trash2 className="text-destructive" />
+                  </Button>
+                )}
               </div>
             );
           })}
