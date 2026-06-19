@@ -37,6 +37,7 @@ export function AddJobDialog({ salespeople }: { salespeople: Salesperson[] }) {
   const qc = useQueryClient();
   const m = useMutation({
     mutationFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
       const { error } = await supabase.from("jobs").insert({
         salesperson_id: salespersonId,
         description: description.trim(),
@@ -44,6 +45,10 @@ export function AddJobDialog({ salespeople }: { salespeople: Salesperson[] }) {
         revenue: Number(revenue),
         hours: Number(hours),
         closed_at: closedAt,
+        status: "approved",
+        submitted_by: u.user?.id ?? null,
+        reviewer_id: u.user?.id ?? null,
+        reviewed_at: new Date().toISOString(),
       });
       if (error) throw error;
     },

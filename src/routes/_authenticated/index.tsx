@@ -1,9 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { LogOut, Sparkles, Shield, Eye } from "lucide-react";
 
 import {
+  approvedJobs,
   fetchActivity,
+  fetchBonuses,
   fetchJobs,
   fetchSalespeople,
   qk,
@@ -19,6 +22,8 @@ import { AddActivityDialog } from "@/components/dashboard/AddActivityDialog";
 import { ManageSalespeopleDialog } from "@/components/dashboard/ManageSalespeopleDialog";
 import { RecentJobs } from "@/components/dashboard/RecentJobs";
 import { ChatWidget } from "@/components/dashboard/ChatWidget";
+import { Approvals } from "@/components/dashboard/Approvals";
+import { BonusesManager } from "@/components/dashboard/BonusesManager";
 import { useRole } from "@/hooks/useRole";
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -38,11 +43,20 @@ function fmt(n: number) {
 function Index() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const roleQ = useRole();
+  const isManager = roleQ.data === "manager";
+
+  // Salesmen don't see the manager dashboard — bounce them to their own.
+  useEffect(() => {
+    if (roleQ.data && roleQ.data !== "manager") {
+      navigate({ to: "/me", replace: true });
+    }
+  }, [roleQ.data, navigate]);
+
   const salespeople = useQuery({ queryKey: qk.salespeople, queryFn: fetchSalespeople });
   const jobs = useQuery({ queryKey: qk.jobs, queryFn: fetchJobs });
   const activity = useQuery({ queryKey: qk.activity, queryFn: fetchActivity });
-  const roleQ = useRole();
-  const isManager = roleQ.data === "manager";
+  const bonuses = useQuery({ queryKey: qk.bonuses, queryFn: fetchBonuses });
 
   async function handleSignOut() {
     await queryClient.cancelQueries();
@@ -53,42 +67,39 @@ function Index() {
 
   const people = salespeople.data ?? [];
   const allJobs = jobs.data ?? [];
+  const approved = approvedJobs(allJobs);
   const allActivity = activity.data ?? [];
+  const pendingCount = allJobs.filter((j) => j.status === "pending").length;
 
   const weekStart = weekStartISO();
-  const weekRevenue = allJobs.filter((j) => j.closed_at >= weekStart).reduce((s, j) => s + j.revenue, 0);
-  const totalRevenue = allJobs.reduce((s, j) => s + j.revenue, 0);
-  const totalJobs = allJobs.length;
+  const weekRevenue = approved.filter((j) => j.closed_at >= weekStart).reduce((s, j) => s + j.revenue, 0);
+  const totalRevenue = approved.reduce((s, j) => s + j.revenue, 0);
+  const totalJobs = approved.length;
+
+  if (!isManager) {
+    return null; // redirecting
+  }
 
   return (
     <div className="min-h-screen">
       <div className="mx-auto max-w-7xl px-6 py-10">
-        {/* Header */}
         <header className="mb-10 flex flex-wrap items-end justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-gold/80">
-              <Sparkles size={14} /> Live dashboard
+              <Sparkles size={14} /> Manager dashboard
             </div>
             <h1 className="mt-2 font-display text-5xl font-semibold tracking-tight">
               Sales <span className="text-gold">Leaderboard</span>
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Track revenue, knocks, and closes — see who's on top this week.
+              Approve receipts, set bonuses, and track the whole team.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs ${
-                isManager
-                  ? "border-gold/40 bg-gold/10 text-gold"
-                  : "border-border bg-muted text-muted-foreground"
-              }`}
-              title={isManager ? "Full edit access" : "View + log jobs/activity"}
-            >
-              {isManager ? <Shield className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-              {isManager ? "Manager" : "Viewer"}
+            <span className="inline-flex items-center gap-1 rounded-full border border-gold/40 bg-gold/10 px-2.5 py-1 text-xs text-gold">
+              <Shield className="h-3 w-3" /> Manager
             </span>
-            {isManager && <ManageSalespeopleDialog salespeople={people} />}
+            <ManageSalespeopleDialog salespeople={people} />
             <AddActivityDialog salespeople={people} />
             <AddJobDialog salespeople={people} />
             <Button variant="outline" size="sm" onClick={handleSignOut} aria-label="Sign out">
@@ -97,23 +108,39 @@ function Index() {
           </div>
         </header>
 
-        {/* Top stats */}
         <div className="mb-8 grid gap-4 sm:grid-cols-3">
           <StatCard label="Revenue this week" value={fmt(weekRevenue)} accent />
           <StatCard label="All-time revenue" value={fmt(totalRevenue)} />
-          <StatCard label="Jobs closed" value={String(totalJobs)} />
+          <StatCard label="Jobs approved" value={String(totalJobs)} />
         </div>
 
-        <Tabs defaultValue="leaderboard" className="w-full">
+        <Tabs defaultValue={pendingCount > 0 ? "approvals" : "leaderboard"} className="w-full">
           <TabsList className="bg-card/60 border border-border/60 backdrop-blur">
             <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+            <TabsTrigger value="approvals" className="relative">
+              Approvals
+              {pendingCount > 0 && (
+                <span className="ml-2 rounded-full bg-gold px-1.5 py-0.5 text-[10px] font-bold text-black">
+                  {pendingCount}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="bonuses">Bonuses</TabsTrigger>
             <TabsTrigger value="progress">Progress</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="leaderboard" className="mt-6 space-y-6">
-            <Leaderboard salespeople={people} jobs={allJobs} />
-            <RevenueTrend salespeople={people} jobs={allJobs} days={30} />
+            <Leaderboard salespeople={people} jobs={approved} />
+            <RevenueTrend salespeople={people} jobs={approved} days={30} />
+          </TabsContent>
+
+          <TabsContent value="approvals" className="mt-6">
+            <Approvals jobs={allJobs} salespeople={people} />
+          </TabsContent>
+
+          <TabsContent value="bonuses" className="mt-6">
+            <BonusesManager bonuses={bonuses.data ?? []} />
           </TabsContent>
 
           <TabsContent value="progress" className="mt-6 space-y-4">
@@ -121,17 +148,17 @@ function Index() {
               <EmptyHint />
             ) : (
               people.map((p) => (
-                <PersonProgress key={p.id} person={p} jobs={allJobs} activity={allActivity} />
+                <PersonProgress key={p.id} person={p} jobs={approved} activity={allActivity} />
               ))
             )}
           </TabsContent>
 
           <TabsContent value="history" className="mt-6">
-            <RecentJobs jobs={allJobs} salespeople={people} limit={50} />
+            <RecentJobs jobs={approved} salespeople={people} limit={50} />
           </TabsContent>
         </Tabs>
       </div>
-      {isManager && <ChatWidget />}
+      <ChatWidget />
     </div>
   );
 }
