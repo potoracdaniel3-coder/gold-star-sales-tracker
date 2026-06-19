@@ -49,6 +49,68 @@ export type Database = {
           },
         ]
       }
+      bonuses: {
+        Row: {
+          active: boolean
+          bonus_amount: number
+          created_at: string
+          id: string
+          label: string
+          weekly_revenue_threshold: number
+        }
+        Insert: {
+          active?: boolean
+          bonus_amount: number
+          created_at?: string
+          id?: string
+          label: string
+          weekly_revenue_threshold: number
+        }
+        Update: {
+          active?: boolean
+          bonus_amount?: number
+          created_at?: string
+          id?: string
+          label?: string
+          weekly_revenue_threshold?: number
+        }
+        Relationships: []
+      }
+      goals: {
+        Row: {
+          created_at: string
+          goal_type: string
+          id: string
+          period_start: string | null
+          salesperson_id: string
+          target: number
+        }
+        Insert: {
+          created_at?: string
+          goal_type: string
+          id?: string
+          period_start?: string | null
+          salesperson_id: string
+          target: number
+        }
+        Update: {
+          created_at?: string
+          goal_type?: string
+          id?: string
+          period_start?: string | null
+          salesperson_id?: string
+          target?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_salesperson_id_fkey"
+            columns: ["salesperson_id"]
+            isOneToOne: false
+            referencedRelation: "salespeople"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           closed_at: string
@@ -57,8 +119,13 @@ export type Database = {
           hours: number
           id: string
           job_type: string
+          reject_reason: string | null
           revenue: number
+          reviewed_at: string | null
+          reviewer_id: string | null
           salesperson_id: string
+          status: string
+          submitted_by: string | null
         }
         Insert: {
           closed_at?: string
@@ -67,8 +134,13 @@ export type Database = {
           hours?: number
           id?: string
           job_type?: string
+          reject_reason?: string | null
           revenue?: number
+          reviewed_at?: string | null
+          reviewer_id?: string | null
           salesperson_id: string
+          status?: string
+          submitted_by?: string | null
         }
         Update: {
           closed_at?: string
@@ -77,8 +149,13 @@ export type Database = {
           hours?: number
           id?: string
           job_type?: string
+          reject_reason?: string | null
           revenue?: number
+          reviewed_at?: string | null
+          reviewer_id?: string | null
           salesperson_id?: string
+          status?: string
+          submitted_by?: string | null
         }
         Relationships: [
           {
@@ -97,6 +174,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          user_id: string | null
         }
         Insert: {
           active?: boolean
@@ -104,6 +182,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          user_id?: string | null
         }
         Update: {
           active?: boolean
@@ -111,6 +190,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          user_id?: string | null
         }
         Relationships: []
       }
