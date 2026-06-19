@@ -69,13 +69,18 @@ export function SubmitJobDialog({ me }: { me: Salesperson }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="gold" size="lg">
-          <Plus /> Submit job
+          <Plus /> Request job approval
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl">Submit a job receipt</DialogTitle>
+          <DialogTitle className="font-display text-2xl">Request job approval</DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            Fill in the details below. Your manager will review the receipt and approve it before
+            it counts on the leaderboard.
+          </p>
         </DialogHeader>
+
         <div className="grid gap-4">
           <Field label="Job type">
             <Select value={jobType} onValueChange={setJobType}>
