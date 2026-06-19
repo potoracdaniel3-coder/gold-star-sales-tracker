@@ -215,7 +215,7 @@ function Mini({ label, value, accent }: { label: string; value: string; accent?:
   );
 }
 
-function AllTimeLeaderboard({ people, jobs }: { people: ReturnType<typeof useQuery<any>>["data"] extends infer T ? any : never; jobs: any }) {
+function AllTimeLeaderboard({ people, jobs }: { people: import("@/lib/db").Salesperson[]; jobs: import("@/lib/db").Job[] }) {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -225,7 +225,7 @@ function AllTimeLeaderboard({ people, jobs }: { people: ReturnType<typeof useQue
       <DialogContent className="max-w-3xl bg-card border-border">
         <DialogHeader><DialogTitle className="font-display text-2xl">All-time leaderboard</DialogTitle></DialogHeader>
         <div className="max-h-[70vh] overflow-y-auto">
-          <Leaderboard salespeople={people ?? []} jobs={jobs ?? []} />
+          <Leaderboard salespeople={people} jobs={jobs} />
         </div>
       </DialogContent>
     </Dialog>
