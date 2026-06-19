@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LogOut, Sparkles } from "lucide-react";
+import { LogOut, Sparkles, Shield, Eye } from "lucide-react";
 
 import {
   fetchActivity,
@@ -18,6 +18,8 @@ import { AddJobDialog } from "@/components/dashboard/AddJobDialog";
 import { AddActivityDialog } from "@/components/dashboard/AddActivityDialog";
 import { ManageSalespeopleDialog } from "@/components/dashboard/ManageSalespeopleDialog";
 import { RecentJobs } from "@/components/dashboard/RecentJobs";
+import { ChatWidget } from "@/components/dashboard/ChatWidget";
+import { useRole } from "@/hooks/useRole";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -39,6 +41,8 @@ function Index() {
   const salespeople = useQuery({ queryKey: qk.salespeople, queryFn: fetchSalespeople });
   const jobs = useQuery({ queryKey: qk.jobs, queryFn: fetchJobs });
   const activity = useQuery({ queryKey: qk.activity, queryFn: fetchActivity });
+  const roleQ = useRole();
+  const isManager = roleQ.data === "manager";
 
   async function handleSignOut() {
     await queryClient.cancelQueries();
@@ -73,7 +77,18 @@ function Index() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <ManageSalespeopleDialog salespeople={people} />
+            <span
+              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs ${
+                isManager
+                  ? "border-gold/40 bg-gold/10 text-gold"
+                  : "border-border bg-muted text-muted-foreground"
+              }`}
+              title={isManager ? "Full edit access" : "View + log jobs/activity"}
+            >
+              {isManager ? <Shield className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+              {isManager ? "Manager" : "Viewer"}
+            </span>
+            {isManager && <ManageSalespeopleDialog salespeople={people} />}
             <AddActivityDialog salespeople={people} />
             <AddJobDialog salespeople={people} />
             <Button variant="outline" size="sm" onClick={handleSignOut} aria-label="Sign out">
@@ -116,6 +131,7 @@ function Index() {
           </TabsContent>
         </Tabs>
       </div>
+      {isManager && <ChatWidget />}
     </div>
   );
 }
