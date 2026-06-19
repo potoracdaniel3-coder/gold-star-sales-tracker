@@ -121,9 +121,10 @@ export function SubmitJobDialog({ me }: { me: Salesperson }) {
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
           <Button variant="gold" disabled={disabled || m.isPending} onClick={() => m.mutate()}>
-            {m.isPending ? "Submitting…" : "Submit"}
+            {m.isPending ? "Sending request…" : "Send request"}
           </Button>
         </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );
