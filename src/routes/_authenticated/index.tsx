@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { LogOut, Sparkles, Shield, Eye } from "lucide-react";
+import { LogOut, Sparkles, Shield } from "lucide-react";
 
 import {
   approvedJobs,
