@@ -25,9 +25,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export function AddJobDialog({ salespeople }: { salespeople: Salesperson[] }) {
+/** Salesman-facing submit. Always inserts as `pending` for their own salesperson row. */
+export function SubmitJobDialog({ me }: { me: Salesperson }) {
   const [open, setOpen] = useState(false);
-  const [salespersonId, setSalespersonId] = useState(salespeople[0]?.id ?? "");
   const [description, setDescription] = useState("");
   const [jobType, setJobType] = useState<string>("driveway");
   const [revenue, setRevenue] = useState("");
@@ -38,23 +38,23 @@ export function AddJobDialog({ salespeople }: { salespeople: Salesperson[] }) {
   const m = useMutation({
     mutationFn: async () => {
       const { data: u } = await supabase.auth.getUser();
+      const uid = u.user?.id;
+      if (!uid) throw new Error("Not signed in");
       const { error } = await supabase.from("jobs").insert({
-        salesperson_id: salespersonId,
+        salesperson_id: me.id,
+        submitted_by: uid,
+        status: "pending",
         description: description.trim(),
         job_type: jobType,
         revenue: Number(revenue),
         hours: Number(hours),
         closed_at: closedAt,
-        status: "approved",
-        submitted_by: u.user?.id ?? null,
-        reviewer_id: u.user?.id ?? null,
-        reviewed_at: new Date().toISOString(),
       });
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.jobs });
-      toast.success("Job recorded");
+      toast.success("Submitted for manager approval");
       setDescription("");
       setRevenue("");
       setHours("");
@@ -63,30 +63,20 @@ export function AddJobDialog({ salespeople }: { salespeople: Salesperson[] }) {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const disabled = !salespersonId || !description.trim() || !revenue || !hours;
+  const disabled = !description.trim() || !revenue || !hours;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="gold" size="lg" disabled={salespeople.length === 0}>
-          <Plus /> Add job
+        <Button variant="gold" size="lg">
+          <Plus /> Submit job
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl">Log a closed job</DialogTitle>
+          <DialogTitle className="font-display text-2xl">Submit a job receipt</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4">
-          <Field label="Salesperson">
-            <Select value={salespersonId} onValueChange={setSalespersonId}>
-              <SelectTrigger><SelectValue placeholder="Pick one" /></SelectTrigger>
-              <SelectContent>
-                {salespeople.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
           <Field label="Job type">
             <Select value={jobType} onValueChange={setJobType}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -117,11 +107,15 @@ export function AddJobDialog({ salespeople }: { salespeople: Salesperson[] }) {
           <Field label="Date closed">
             <Input type="date" value={closedAt} onChange={(e) => setClosedAt(e.target.value)} />
           </Field>
+          <p className="text-xs text-muted-foreground">
+            Submitted as <span className="text-foreground font-medium">{me.name}</span>. A manager
+            will review and approve before it counts on the leaderboard.
+          </p>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
           <Button variant="gold" disabled={disabled || m.isPending} onClick={() => m.mutate()}>
-            {m.isPending ? "Saving…" : "Save job"}
+            {m.isPending ? "Submitting…" : "Submit"}
           </Button>
         </DialogFooter>
       </DialogContent>

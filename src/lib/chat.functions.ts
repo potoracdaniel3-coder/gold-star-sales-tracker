@@ -158,6 +158,10 @@ export const chatWithAssistant = createServerFn({ method: "POST" })
               revenue,
               hours,
               closed_at,
+              status: "approved",
+              submitted_by: userId,
+              reviewer_id: userId,
+              reviewed_at: new Date().toISOString(),
             })
             .select()
             .single();
