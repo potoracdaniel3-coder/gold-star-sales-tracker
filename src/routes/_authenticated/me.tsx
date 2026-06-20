@@ -28,6 +28,7 @@ import { MyGoals } from "@/components/dashboard/MyGoals";
 import { MySubmissions } from "@/components/dashboard/MySubmissions";
 import { RewardsTrack } from "@/components/dashboard/RewardsTrack";
 import { TierBadge } from "@/components/dashboard/TierBadge";
+import { TierTrack } from "@/components/dashboard/TierTrack";
 import { AchievementsGrid } from "@/components/dashboard/AchievementsGrid";
 import { DailyChallenge } from "@/components/dashboard/DailyChallenge";
 import { computeBadges, computeDailyStreak, hasActivityToday, tierFromRevenue } from "@/lib/gamification";
