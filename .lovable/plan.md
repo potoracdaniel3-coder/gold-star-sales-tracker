@@ -1,29 +1,71 @@
 ## Goal
-Make it easy to test the salesman dashboard right now by enabling auto-confirm email, and capture the future requirement that managers must confirm their email while salespeople do not.
+Layer proven gamification mechanics (points, tiers, badges, streaks, challenges, leaderboard perks) onto the existing salesman dashboard. Keep current XP/level math intact and build everything around it so nothing already working breaks.
 
-## Steps
+## What gets added
 
-1. **Enable auto-confirm email (now, for testing)**
-   - Turn on auto-confirm so any new signup is instantly logged in.
-   - This lets you create a non-manager test account and immediately land on `/me`.
+### 1. Tiered ranks (Bronze → Platinum)
+Derived from total approved revenue. Tiers are pure presentation — no new table needed.
 
-2. **Document the testing flow** (no code, just so you know what to do once auto-confirm is on)
-   - Sign out of your manager account.
-   - Go to `/auth` → "Need an account? Sign up".
-   - Use any email that is NOT `potoracdaniel3@gmail.com` or `joshuaburketbusiness@gmail.com` (e.g. `tester+1@example.com`).
-   - Enter a display name and a password (8+ chars).
-   - You'll be redirected to `/` and then auto-bounced to `/me` (the salesman dashboard).
-   - From `/me` you can: see XP/level/streak/rank, submit a job (pending), set goals, view the reward track, and open the all-time leaderboard.
-   - To test approval flow end-to-end: submit a job as the salesman, sign back in as the manager, open the **Approvals** tab, and approve it. The job then appears in XP, leaderboard, and rewards.
+| Tier | Threshold (all-time revenue) | Color |
+|---|---|---|
+| Bronze | $0 | #cd7f32 |
+| Silver | $25,000 | #c0c0c0 |
+| Gold | $75,000 | #d4af37 |
+| Platinum | $200,000 | #5ce1e6 |
+| Diamond | $500,000 | #9b8cff |
 
-3. **Future work (not done now — noted for later)**
-   - Add a manager-only email-confirmation requirement: salespeople auto-confirm, managers must click the email link before they can sign in.
-   - Implementation sketch for later: keep global auto-confirm OFF, then on signup auto-confirm only non-manager emails (via a safe server-side path), and rely on the standard email-confirmation flow for the two hardcoded manager emails. This will also require setting up the auth email templates / sender domain so the confirmation email is actually delivered with your branding.
+Shown as a badge on the profile card, on every leaderboard row, and as a progress bar "X to next tier" on the dashboard.
+
+### 2. Badges / achievements
+Computed client-side from existing data (jobs, activity, streaks). No DB writes — earned badges just render from facts. Initial set:
+
+- **First Blood** — first approved job
+- **Closer** — 10 approved jobs
+- **Rainmaker** — 50 approved jobs
+- **Big Ticket** — single job ≥ $10k
+- **Hot Streak** — 3-week streak
+- **On Fire** — 6-week streak
+- **Door Crusher** — 500 lifetime doors knocked
+- **Appointment King** — 100 lifetime appointments set
+- **Top Dog** — currently #1 on all-time leaderboard
+- **Tier badges** — Bronze/Silver/Gold/Platinum/Diamond (auto)
+
+Rendered as a grid on the dashboard ("Achievements") with locked/unlocked states + tooltip showing how to earn. Earned badges also surface as small icons next to the name on the public leaderboard.
+
+### 3. Daily streak + rotating daily challenge
+Currently `computeStreak` is weekly. Add a parallel **daily streak** based on `activity_log` + approved jobs (any day with ≥1 door knocked, appt set, or approved job counts). Show flame icon + "X day streak — log activity today to keep it alive".
+
+Daily challenge: one rotating challenge per day, deterministic from date so everyone sees the same one (e.g. "Knock 30 doors today", "Close 1 job today", "Set 3 appointments"). Progress bar fills from today's activity/jobs. Completion shows a checkmark + small XP bonus banner (visual only — does not write to DB).
+
+### 4. Leaderboard perks
+- **Crown** icon on rank #1
+- Medal colors on top 3 (gold/silver/bronze)
+- Tier badge + earned-achievement icons next to each name
+- New **"This week"** toggle on the leaderboard dialog so users can switch between all-time and current-week views (weekly resets visually every Monday)
+
+### 5. Cash bonus tiers (manager-approved)
+Existing `bonuses` table already drives weekly revenue thresholds → cash payouts. Reuse it:
+- `RewardsTrack` already shows progress to next bonus tier — keep it, restyle with tier colors and a "Claim" button once threshold is hit
+- Clicking **Claim** opens a confirmation that submits a request (reuses existing approvals pipeline — a `pending` job-style record or a new lightweight `bonus_claim` flag). To keep scope tight: this plan reuses the existing manager **Approvals** queue by adding a `kind: 'bonus_claim'` notification rather than a new table. Manager sees it alongside job approvals and approves/rejects.
+
+> Note: if you'd rather skip the claim button and have the manager just pay out automatically when the weekly threshold is hit, say so and I'll drop step 5's claim flow. Otherwise this is the minimum-DB-change path.
+
+## Files touched
+
+**New**
+- `src/lib/gamification.ts` — pure functions: `tierFromRevenue`, `computeBadges`, `computeDailyStreak`, `dailyChallengeFor(date)`, `challengeProgress`
+- `src/components/dashboard/TierBadge.tsx`
+- `src/components/dashboard/AchievementsGrid.tsx`
+- `src/components/dashboard/DailyChallenge.tsx`
+
+**Edited**
+- `src/routes/_authenticated/me.tsx` — add tier badge to profile card, insert AchievementsGrid and DailyChallenge sections, show daily streak alongside weekly streak
+- `src/components/dashboard/Leaderboard.tsx` — crown, medal colors, tier badge, achievement icons, week/all-time toggle
+- `src/components/dashboard/RewardsTrack.tsx` — restyle with tier colors + optional Claim button
+
+**DB** — none required for the core mechanics. Step 5's Claim flow only needs a migration if you want it (one small table `bonus_claims` with manager approval policies). Confirm before I add it.
 
 ## Out of scope
-- Email template branding / custom sender domain (only needed when we switch to manager-only confirmation).
-- Any UI changes to the salesman dashboard.
-- Any changes to roles, RLS, or the chatbot.
-
-## Technical detail
-- Single backend change: set `auto_confirm_email = true` on the project's auth config. No migrations, no code edits.
+- Real money/payouts logic (managers settle outside the app)
+- Push notifications
+- Virtual goods / avatar customization beyond existing color
