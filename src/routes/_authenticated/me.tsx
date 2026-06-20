@@ -163,8 +163,11 @@ function SalesmanDashboard() {
               {me.name.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-[200px]">
-              <div className="font-display text-3xl font-semibold">{me.name}</div>
-              <div className="mt-1 flex items-center gap-2 text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="font-display text-3xl font-semibold">{me.name}</div>
+                <TierBadge tier={stats.tier.current} size="md" />
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-sm">
                 <Trophy className="h-4 w-4 text-gold" />
                 <span className="text-gold font-semibold">Rank {stats.rank || "—"}</span>
                 <span className="text-muted-foreground">of {stats.of}</span>
@@ -174,13 +177,29 @@ function SalesmanDashboard() {
               <div className="mt-3">
                 <Progress value={stats.lvl.pct} className="h-2" />
               </div>
+              {stats.tier.next && (
+                <div className="mt-2 text-[11px] text-muted-foreground">
+                  {fmt(stats.tier.toNext)} more all-time revenue to reach{" "}
+                  <span className="font-semibold" style={{ color: stats.tier.next.color }}>{stats.tier.next.label}</span>
+                </div>
+              )}
             </div>
           </div>
-          <div className="mt-6 grid grid-cols-3 gap-3">
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Tile
+              icon={<Flame className={`h-5 w-5 ${stats.loggedToday ? "text-orange-400" : "text-muted-foreground"}`} />}
+              value={String(stats.dailyStreak)}
+              label={stats.loggedToday ? "Day streak" : "Day streak (log to keep)"}
+            />
             <Tile icon={<Flame className="h-5 w-5 text-orange-400" />} value={String(stats.streak)} label="Week streak" />
             <Tile icon={<Zap className="h-5 w-5 text-cyan-300" />} value={stats.xp.toLocaleString()} label="XP points" />
             <Tile icon={<Trophy className="h-5 w-5 text-gold" />} value={String(stats.lvl.level)} label="Level" />
           </div>
+        </div>
+
+        {/* Daily challenge */}
+        <div className="mb-6">
+          <DailyChallenge personId={me.id} jobs={allJobs} activity={allActivity} />
         </div>
 
         {/* Analytics row */}
@@ -194,6 +213,11 @@ function SalesmanDashboard() {
         {/* Rewards */}
         <div className="mb-6">
           <RewardsTrack bonuses={bonuses} weeklyRevenue={stats.weekRevenue} />
+        </div>
+
+        {/* Achievements */}
+        <div className="mb-6">
+          <AchievementsGrid earned={stats.badges} />
         </div>
 
         {/* Goals + Submissions */}
