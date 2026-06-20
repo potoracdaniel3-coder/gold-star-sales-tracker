@@ -52,13 +52,38 @@ export type Goal = {
   created_at: string;
 };
 
+export type BonusMetric = "revenue" | "jobs" | "doors" | "appts";
+export type BonusPeriod = "weekly" | "monthly" | "lifetime";
+export type RewardType = "cash" | "prize" | "recognition" | "time_off";
+
 export type Bonus = {
   id: string;
   label: string;
-  weekly_revenue_threshold: number;
-  bonus_amount: number;
+  metric: BonusMetric;
+  period: BonusPeriod;
+  threshold: number;
+  reward_type: RewardType;
+  reward_value: string;
   active: boolean;
   created_at: string;
+};
+
+export const BONUS_METRIC_LABELS: Record<BonusMetric, string> = {
+  revenue: "Revenue",
+  jobs: "Jobs closed",
+  doors: "Doors knocked",
+  appts: "Appointments set",
+};
+export const BONUS_PERIOD_LABELS: Record<BonusPeriod, string> = {
+  weekly: "this week",
+  monthly: "this month",
+  lifetime: "all-time",
+};
+export const REWARD_TYPE_LABELS: Record<RewardType, string> = {
+  cash: "Cash payout",
+  prize: "Prize",
+  recognition: "Recognition",
+  time_off: "Time off",
 };
 
 export const qk = {
