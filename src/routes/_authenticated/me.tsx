@@ -197,6 +197,11 @@ function SalesmanDashboard() {
           </div>
         </div>
 
+        {/* Tier track */}
+        <div className="mb-6">
+          <TierTrack totalRevenue={stats.totalRevenue} />
+        </div>
+
         {/* Daily challenge */}
         <div className="mb-6">
           <DailyChallenge personId={me.id} jobs={allJobs} activity={allActivity} />
