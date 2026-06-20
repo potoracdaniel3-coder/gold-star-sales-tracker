@@ -89,9 +89,15 @@ function SalesmanDashboard() {
       total: approved.filter((j) => j.salesperson_id === p.id).reduce((s, j) => s + j.revenue, 0),
     })).sort((a, b) => b.total - a.total);
     const rank = totals.findIndex((t) => t.id === me.id) + 1;
+    const isTopDog = totals.length > 0 && totals[0].id === me.id && totals[0].total > 0;
 
-    return { weekRevenue, totalRevenue, xp, lvl, streak, closeRate, avgRevenue, distinctWeeks, rank, of: people.length };
-  }, [me, myApproved, myJobs, approved, people]);
+    const tier = tierFromRevenue(totalRevenue);
+    const dailyStreak = computeDailyStreak(myApproved, allActivity.filter((a) => a.salesperson_id === me.id));
+    const loggedToday = hasActivityToday(allJobs, allActivity, me.id);
+    const badges = computeBadges({ personId: me.id, jobs: allJobs, activity: allActivity, weekStreak: streak, isTopDog });
+
+    return { weekRevenue, totalRevenue, xp, lvl, streak, dailyStreak, loggedToday, closeRate, avgRevenue, distinctWeeks, rank, of: people.length, tier, badges, isTopDog };
+  }, [me, myApproved, myJobs, approved, people, allJobs, allActivity]);
 
   async function handleSignOut() {
     await qc.cancelQueries();
