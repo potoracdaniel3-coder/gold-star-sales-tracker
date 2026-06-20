@@ -212,7 +212,7 @@ function SalesmanDashboard() {
 
         {/* Rewards */}
         <div className="mb-6">
-          <RewardsTrack bonuses={bonuses} weeklyRevenue={stats.weekRevenue} />
+          <RewardsTrack bonuses={bonuses} personId={me.id} jobs={allJobs} activity={allActivity} />
         </div>
 
         {/* Achievements */}
