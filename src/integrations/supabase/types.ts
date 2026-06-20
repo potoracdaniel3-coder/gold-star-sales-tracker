@@ -52,27 +52,42 @@ export type Database = {
       bonuses: {
         Row: {
           active: boolean
-          bonus_amount: number
+          bonus_amount: number | null
           created_at: string
           id: string
           label: string
-          weekly_revenue_threshold: number
+          metric: string
+          period: string
+          reward_type: string
+          reward_value: string
+          threshold: number
+          weekly_revenue_threshold: number | null
         }
         Insert: {
           active?: boolean
-          bonus_amount: number
+          bonus_amount?: number | null
           created_at?: string
           id?: string
           label: string
-          weekly_revenue_threshold: number
+          metric?: string
+          period?: string
+          reward_type?: string
+          reward_value: string
+          threshold: number
+          weekly_revenue_threshold?: number | null
         }
         Update: {
           active?: boolean
-          bonus_amount?: number
+          bonus_amount?: number | null
           created_at?: string
           id?: string
           label?: string
-          weekly_revenue_threshold?: number
+          metric?: string
+          period?: string
+          reward_type?: string
+          reward_value?: string
+          threshold?: number
+          weekly_revenue_threshold?: number | null
         }
         Relationships: []
       }
