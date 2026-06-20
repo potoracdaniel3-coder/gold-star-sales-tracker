@@ -138,12 +138,11 @@ export async function fetchBonuses(): Promise<Bonus[]> {
   const { data, error } = await supabase
     .from("bonuses")
     .select("*")
-    .order("weekly_revenue_threshold", { ascending: true });
+    .order("threshold", { ascending: true });
   if (error) throw error;
-  return ((data ?? []) as unknown as Bonus[]).map((b) => ({
+  return ((data ?? []) as unknown as (Bonus & { threshold: number | string })[]).map((b) => ({
     ...b,
-    weekly_revenue_threshold: Number(b.weekly_revenue_threshold),
-    bonus_amount: Number(b.bonus_amount),
+    threshold: Number(b.threshold),
   }));
 }
 
